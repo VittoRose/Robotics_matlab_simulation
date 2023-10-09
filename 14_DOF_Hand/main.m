@@ -40,6 +40,8 @@ i = 1;
 q = q0;
 q_out(:,1) = q0;
 
+[thumb, index, middle, ring, pinky] = hand_direct_kinematics(q, L, offset);
+
 plot_hand(q,L, offset)
 axis equal
 
@@ -57,7 +59,6 @@ while (norm(des_pinky - pinky)>0.015 || norm(des_ring - ring)>0.015 || norm(des_
     e_pinky = des_pinky - pinky;
 
     errors(:, i) = [e_thumb; e_index; e_middle; e_ring; e_pinky];
-
 
     i = i + 1;
 end
