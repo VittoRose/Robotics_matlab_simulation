@@ -17,6 +17,9 @@ function plot_hand(q, L, offset)
     % -- pinky plot -- %
     plot([offset(5,1) pinky(1,1) pinky(1,2) pinky(1,3)],[offset(5,2) pinky(2,1) pinky(2,2) pinky(2,3)], '-ko', 'linewidth', 2);
 
+    % -- hand plot -- %%
+    plot([offset(1,1) offset(2,1)], [offset(1,2) offset(2,2)], '-bo','linewidth',2);
+
     grid on
 
 end
