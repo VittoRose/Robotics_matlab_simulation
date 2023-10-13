@@ -1,6 +1,7 @@
 %% -- 14 DOF hand task set inversion -- %%
 
 clear; close all; clc;
+addpath functions\
 
 %% -- Hand parameters -- %%
 
@@ -12,28 +13,38 @@ offset = [-20 0; 0 20; 3 27; 4 27; 5 23];
 
 % Initial configuration
 
-q0 = [pi-0.1 -pi/6-.1 ...
-    1.6/2*pi   pi/4   pi/4+0.1...
-    pi/2+0.2 0.1 0.1 ...
-    pi/2+0.1 0.1 0.1 ...
-    pi/2 0.1 0.1 ]';
+q0 = [pi-0.1 -.1 ...
+    pi/3  0 0 ...
+    pi/3 0 0 ...
+    pi/3 0 0 ...
+    pi/3 0 0 ]';
+
+%   final config
+
+% q0 = [pi-0.1 -pi/6-.1 ...
+%     1.6/2*pi   pi/4   pi/4+0.1...
+%     pi/2+0.2 0.1 0.1 ...
+%     pi/2+0.1 0.1 0.1 ...
+%     pi/2 0.1 0.1 ]';
 
 %% --- simulation parameters --- %%
 Ts = 0.05;
-max_step = 200;
+max_step = 100;
 epsilon = 0.001;
 
 % Desired configuration 
-des_thumb = [0; 0];
-des_index = [0; 0];
-des_middle = [0; 0];
-des_ring = [0; 0];
-des_pinky = [0; 0];
+des_thumb = [-75; 24];
+des_index = [-75.5; 28];
+des_middle = [-22; 118];
+des_ring = [-11; 120];
+des_pinky = [-1.5; 111];
 
 % --- pre allocation --- $$
 q_out = zeros(DOF, max_step);
-errors = zeros(DOF, max_step);
+errors = zeros(10, max_step);
+u = zeros(DOF,1);
 
+plot_hand(q0,L,offset);
 
 %% Loop: simulation and control %%
 i = 1;
@@ -42,14 +53,23 @@ q_out(:,1) = q0;
 
 [thumb, index, middle, ring, pinky] = hand_direct_kinematics(q, L, offset);
 
-plot_hand(q,L, offset)
-axis equal
+thumb = thumb(1:2,2);
+index = index(1:2,3);
+middle = middle(1:2,3);
+ring = ring(1:2,3);
+pinky = pinky(1:2,3);
 
 while (norm(des_pinky - pinky)>0.015 || norm(des_ring - ring)>0.015 || norm(des_middle - middle)>0.015...
         || norm(des_index - index)>0.015 || norm(des_thumb - thumb)>0.015) && i<max_step
     
     q = q_out(:,i); 
-  [thumb, index, middle, ring, pinky] = hand_direct_kinematics(q, L, offset);
+    [thumb, index, middle, ring, pinky] = hand_direct_kinematics(q, L, offset);
+    
+    thumb = thumb(1:2,2);
+    index = index(1:2,3);
+    middle = middle(1:2,3);
+    ring = ring(1:2,3);
+    pinky = pinky(1:2,3);
 
     %-- errors --%
     e_thumb = des_thumb - thumb;
@@ -60,8 +80,59 @@ while (norm(des_pinky - pinky)>0.015 || norm(des_ring - ring)>0.015 || norm(des_
 
     errors(:, i) = [e_thumb; e_index; e_middle; e_ring; e_pinky];
 
+    %% -- stack of task control -- %%
+
+    J1 = get_J_thumb(q);
+    J1 = J1(1:2,:);                     % prendo soltanto le coordinate spaziali
+    pinv_J1 = pinv(J1, epsilon);        % pseudoinversa di J1 14x3
+    P1 = eye(14) - pinv_J1*J1;          % proiettore nel nullo di J1 14x14
+    u1 = pinv_J1 * e_thumb;             
+    
+    J2 = get_J_index(q);
+    J2 = J2(1:2,:);                     
+    P2 = P1 - pinv(J2*P1, epsilon) * J2*P1;
+    u2 = u1 + pinv(J2*P1,epsilon)*(e_index - J2*u1);
+
+    J3 = get_J_middle(q);
+    J3 = J3(1:2,:);                             
+    P3 = P2 - pinv(J3*P2, epsilon) * J3*P2;
+    u3 = u2 + pinv(J3*P2,epsilon)*(e_middle - J3*u2);
+
+    J4 = get_J_ring(q);
+    J4 = J4(1:2,:);                             
+    P4 = P3 - pinv(J4*P3, epsilon) * J4*P3;
+    u4 = u3 + pinv(J4*P3,epsilon)*(e_ring - J4*u3);
+
+    J5 = get_J_pinky(q);
+    J5 = J5(1:2,:);                             
+    P5 = P4 - pinv(J5*P4, epsilon) * J5*P4;
+    u5 = u4 + pinv(J5*P4,epsilon)*(e_pinky - J5*u4);
+
+    q_out(:, i+1) = q + Ts*u5;
+
     i = i + 1;
 end
+i = i-1;
+
+%% Animation %%
+a = figure; 
+title("Animation")
+axis equal;
+for j = 1:i
+    cla(a)
+    axis([-90 60, -1.5 125]);
+    plot_hand(q_out(:,j),L, offset);
+    pause(0.1);
+end
+
+%% -- Plot configuration -- %% 
+
+figure;
+subplot(1,5,1)
+plot(step,q_out(1,:));
+hold on;
+plot(step,q_out(2,:));
+
 
 
 

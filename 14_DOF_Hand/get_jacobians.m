@@ -8,11 +8,11 @@ offset = [-20 0; 0 20; 3 27; 4 27; 5 23];
 
 [thumb, index, middle, ring, pinky] = hand_direct_kinematics(q, L, offset);
 
-J_thumb = jacobian(thumb(:),q);
-J_index = jacobian(index(:),q);
-J_middle = jacobian(middle(:),q);
-J_ring = jacobian(ring(:),q);
-J_pinky = jacobian(pinky(:),q);
+J_thumb = jacobian(thumb(:,2),q);
+J_index = jacobian(index(:,3),q);
+J_middle = jacobian(middle(:,3),q);
+J_ring = jacobian(ring(:,3),q);
+J_pinky = jacobian(pinky(:,3),q);
 
 disp('writing functions...')
 matlabFunction(J_thumb,'file','functions\get_J_thumb', 'Vars', {q});
