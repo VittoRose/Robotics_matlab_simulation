@@ -44,8 +44,6 @@ q_out = zeros(DOF, max_step);
 errors = zeros(10, max_step);
 u = zeros(DOF,1);
 
-plot_hand(q0,L,offset);
-
 %% Loop: simulation and control %%
 i = 1;
 q = q0;
@@ -112,7 +110,10 @@ while (norm(des_pinky - pinky)>0.015 || norm(des_ring - ring)>0.015 || norm(des_
 
     i = i + 1;
 end
+
+% -- resize vector -- %%
 i = i-1;
+q_out = q_out(:, 1:i);
 
 %% Animation %%
 a = figure; 
@@ -127,13 +128,35 @@ end
 
 %% -- Plot configuration -- %% 
 
+t = linspace(0,Ts*(i),i);
+
 figure;
-subplot(1,5,1)
-plot(step,q_out(1,:));
-hold on;
-plot(step,q_out(2,:));
+subplot(1,5,1);
+plot(t,q_out(1:2,:));
+grid on;
+title('Thumb Lagrangian coordinates', 'Interpreter', 'latex')
+legend('q_1','q_2')
 
+subplot(1,5,2);
+plot(t,q_out(3:5,:));
+grid on;
+title('Index Lagrangian coordinates', 'Interpreter', 'latex')
+legend('q_3','q_4', 'q_5')
 
+subplot(1,5,3);
+plot(t,q_out(6:8,:));
+grid on;
+title('Middle Lagrangian coordinates', 'Interpreter', 'latex')
+legend('q_6','q_7', 'q_8')
 
+subplot(1,5,4);
+plot(t,q_out(9:11,:));
+grid on;
+title('Ring Lagrangian coordinates', 'Interpreter', 'latex')
+legend('q_9','q_{10}', 'q_{11}')
 
-
+subplot(1,5,5);
+plot(t,q_out(12:14,:));
+grid on;
+title('Pinky Lagrangian coordinates', 'Interpreter', 'latex')
+legend('q_{12}','q_{13}', 'q_{14}')
