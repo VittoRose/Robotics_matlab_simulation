@@ -1,7 +1,7 @@
 %% ----- Animated plot ----- %%
 close all
 
-dt  =  0.01;
+dt  =  0.1;
 
 % Create a blank figure
 f = figure;
