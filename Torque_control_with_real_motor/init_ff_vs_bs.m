@@ -2,6 +2,7 @@
 %clc, clear, close all;
 
 %% Motor parameters 48V DC servo motor   https://www.ato.com/800w-dc-servo-motor
+
 R = 0.11;       % 0.11 [ohm]
 L = 50e-6;      % 50e-6 [H]
 k_mot = 0.23;   % 0.23 [Nm/A]
